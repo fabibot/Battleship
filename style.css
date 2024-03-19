@@ -1,0 +1,98 @@
+html{
+    font-size: 62.3%;
+    --head-color : rgb(13, 35, 161);
+    --second-color : #d2dbf7;
+    --third-color : #3929f5a6;
+    background-color: var(--second-color);
+
+}
+
+.header{
+    background-color: var(--head-color);
+    padding: 7px 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.logo {
+    width: 60px;
+    height: 60px;
+    background: url("./shipping.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin: 0px 20px;
+}
+h1, h3, button {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+h1 {
+    font-size: 6rem;
+
+}
+
+h3{
+    font-size: 3rem;
+}
+.mainDiv {
+ background-color: var(--second-color);
+}
+
+.divButton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+button {
+    margin: 40px;
+    padding: 10px;
+    width: 100px;
+    height: 41px;
+    border-radius: 27px;
+    border: none;
+    background-color: var(--third-color);
+    font-size: 2rem;
+    justify-self: center;
+}
+button:hover {
+    background-color: var(--head-color);
+}
+.gameboard{
+    display: flex;
+}
+
+.side{
+height: 500px;
+width: 50%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+.grid{
+    border: solid;
+    height: 400px;
+    width: 400px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+}
+
+.grid > div{
+    border: solid 1px;
+}
+/* .right > div >div:hover{
+    background-color: var(--third-color);
+} */
+
+.shipAlive {
+    background-color: rgb(147, 218, 137);
+}
+.shipSunk {
+    background-color: rgb(53, 53, 53);
+}
+.clicked{
+    background-color: aqua;
+}
