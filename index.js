@@ -86,6 +86,23 @@ class Gameboard {
         }
         return false;
     }
+        getComputerAttack(){
+        let attack;
+        let letterList = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+        const index = Math.floor(Math.random() * 10);
+        let letter = letterList[index];
+        let number =  Math.floor(Math.random() * 10) + 1;
+        attack = letter + number; 
+        while(computerCaseList.includes(attack)){
+            const index = Math.floor(Math.random() * 10);
+            let letter = letterList[index];
+            let number =  Math.floor(Math.random() * 10) + 1;
+            attack = letter + number; 
+        }
+        computerCaseList.push(attack);
+        return attack;
+    }
+
     checkIfWinner(player){
         let sunkShipCount = 0;
         for(let ship of player){
@@ -101,17 +118,145 @@ class Gameboard {
     }
 }
 
+class ManageDOM {
+    displayGrid(){
+        let node = document.createElement("div");
+        node.classList.add("board");
+        let divLetter = document.createElement("div");
+        let divNumber = document.createElement("div");
+        let divgrid  = document.createElement("div");
+        divLetter.classList.add("letters");
+        divNumber.classList.add("numbers");
+        divgrid.classList.add("grid");
+        node.appendChild(divLetter);
+        node.appendChild(divNumber);
+        node.appendChild(divgrid);
+        return node;
+    }
+    
+    displaySides(){
+        const lettersDiv = document.querySelectorAll(".letters");
+        const numbersDiv = document.querySelectorAll(".numbers");
+        for(let j = 0; j < 2; j++){
+            let firstLetter = "@";
+            let firstNumber = 1;
+            for(let i = 0; i < 10; i++){
+                let div = document.createElement("div");
+                let newLetter = String.fromCharCode(firstLetter.charCodeAt(0) + 1);
+                firstLetter = newLetter;
+                div.textContent = newLetter;
+                lettersDiv[j].appendChild(div);
+                let div2 = document.createElement("div");
+                div2.textContent = firstNumber++;
+                numbersDiv[j].appendChild(div2);
+            }
+        }
+    }
+    printWinner(winner){
+        console.log(`The winner is ${winner}`);
+        const mainDiv = document.querySelector(".mainDiv")
+        const gameboardDiv = document.querySelector(".gameboard");
+        const replaceDiv = document.createElement("div");
+        replaceDiv.classList.add("winnerDiv");
+        replaceDiv.textContent = `The winner is ${winner}`;
+        mainDiv.replaceChild(replaceDiv, gameboardDiv);
+    }
+
+    displayGameBoard(){
+        const mainDiv = document.querySelector(".mainDiv");
+        const gameBoard = document.createElement("div");
+        gameBoard.classList.add("gameboard");
+        const playerDiv = document.createElement("div");
+        playerDiv.setAttribute("id", "playerDiv");
+        playerDiv.classList.add("side", "left"); 
+        let h3Player = document.createElement("h3");
+        h3Player.textContent = "Player Grid";
+        let node = this.displayGrid();
+        playerDiv.appendChild(h3Player);
+        playerDiv.appendChild(node);
+        gameBoard.appendChild(playerDiv);
+        const winnerDiv = document.querySelector(".winnerDiv");
+        if(!winnerDiv){
+            mainDiv.appendChild(gameBoard);
+        } else {
+            mainDiv.replaceChild(gameBoard, winnerDiv);
+        }
+    
+        const compDiv = document.createElement("div");
+        compDiv.setAttribute("id", "computerDiv");
+        compDiv.classList.add("side", "right"); 
+        let h3comp = document.createElement("h3");
+        h3comp.textContent = "computer Grid";
+        let node2 = this.displayGrid();
+        compDiv.appendChild(h3comp);
+        compDiv.appendChild(node2);
+        gameBoard.appendChild(compDiv);
+    
+        const allGrids = document.querySelectorAll(".grid");
+        this.setGrid(allGrids[0]);
+        this.setGrid(allGrids[1]);
+        this.displaySides();
+    }
+    setGrid(grid){
+        let letter = "A";
+        let number = 1;
+        let position = "";
+        for(let i = 0; i < 100; i++){
+            const gridCase = document.createElement("div");
+            position = letter + number;
+            let newLetter = String.fromCharCode(letter.charCodeAt(0) + 1);
+            letter = newLetter;
+            if(letter == "K"){
+                letter = "A";
+                number++;
+            }
+            gridCase.setAttribute("id", position);
+            gridCase.addEventListener("click", () => {
+                caseClicked = gridCase.getAttribute('id');
+            });
+            grid.appendChild(gridCase);
+        }
+    }
+    displayShips(ships){
+        let currentCase = "";
+        for(let ship of ships) {
+            if(ship.isVertical) {
+                let letter = ship.position[0];
+                    let number = ship.position[1];
+                    let lenght = ship.lenght;
+                    for(let i = 0; i < lenght; i++){
+                        currentCase = letter + number;
+                        number++;
+                        let caseShip = document.querySelector(`#${currentCase}`);
+                        caseShip.classList.add("shipAlive")
+                    }
+            } else {
+                let letter = ship.position[0];
+                let number = ship.position[1];
+                let lenght = ship.lenght;
+                for(let i = 0; i < lenght; i++) {
+                    let newLetter = String.fromCharCode(letter.charCodeAt(0) + 1);
+                    currentCase = letter + number;
+                    letter = newLetter;
+                    let caseShip = document.querySelector(`#${currentCase}`);
+                    caseShip.classList.add("shipAlive")
+                }
+            }
+        }
+    } 
+}
+
+let dom = new ManageDOM();
 
 function startGame(){
     console.log("start game!");
     playerCaseList = [];
     computerCaseList = [];
-    displayGameBoard();
+    dom.displayGameBoard();
     let game = new Gameboard(playerShipsObject, computerShipsObject);
-    displayShips(game.playerShips);
+    dom.displayShips(game.playerShips);
     const rightDiv = document.querySelector(".right");
     rightDiv.addEventListener("click", () => {
-        //player turn
         if(!playerCaseList.includes(caseClicked)){
             playerCaseList.push(caseClicked);
             playerCaseList.push(caseClicked);
@@ -123,11 +268,10 @@ function startGame(){
                 caseClickedDiv[1].classList.add("clicked");
             }
             if(game.checkIfWinner(game.computerShips)){
-                printWinner("Player");
+                dom.printWinner("Player");
             }
-        //computer turn
             setTimeout(() => {
-                let computerAttack = getComputerAttack();
+                let computerAttack = game.getComputerAttack();
                 let isHit = game.receiveAttack(computerAttack, game.playerShips);
                 const caseClickedDiv = document.querySelectorAll((`#${computerAttack}`));
                 if(isHit){
@@ -143,151 +287,8 @@ function startGame(){
     });
 }
 
-function setGrid(grid){
-    let letter = "A";
-    let number = 1;
-    let position = "";
-    for(let i = 0; i < 100; i++){
-        const gridCase = document.createElement("div");
-        position = letter + number;
-        let newLetter = String.fromCharCode(letter.charCodeAt(0) + 1);
-        letter = newLetter;
-        if(letter == "K"){
-            letter = "A";
-            number++;
-        }
-        gridCase.setAttribute("id", position);
-        gridCase.addEventListener("click", () => {
-            caseClicked = gridCase.getAttribute('id');
-        });
-        grid.appendChild(gridCase);
-    }
-}
-
-function displayShips(ships){
-    let currentCase = "";
-    for(let ship of ships) {
-        if(ship.isVertical) {
-            let letter = ship.position[0];
-                let number = ship.position[1];
-                let lenght = ship.lenght;
-                for(let i = 0; i < lenght; i++){
-                    currentCase = letter + number;
-                    number++;
-                    let caseShip = document.querySelector(`#${currentCase}`);
-                    caseShip.classList.add("shipAlive")
-                }
-        } else {
-            let letter = ship.position[0];
-            let number = ship.position[1];
-            let lenght = ship.lenght;
-            for(let i = 0; i < lenght; i++) {
-                let newLetter = String.fromCharCode(letter.charCodeAt(0) + 1);
-                currentCase = letter + number;
-                letter = newLetter;
-                let caseShip = document.querySelector(`#${currentCase}`);
-                caseShip.classList.add("shipAlive")
-            }
-        }
-    }
-}
 
 
-function getComputerAttack(){
-    let attack;
-    let letterList = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
-    const index = Math.floor(Math.random() * 10);
-    let letter = letterList[index];
-    let number =  Math.floor(Math.random() * 10) + 1;
-    attack = letter + number; 
-    while(computerCaseList.includes(attack)){
-        const index = Math.floor(Math.random() * 10);
-        let letter = letterList[index];
-        let number =  Math.floor(Math.random() * 10) + 1;
-        attack = letter + number; 
-    }
-    computerCaseList.push(attack);
-    return attack;
-}
-
-function displayGameBoard(){
-    const mainDiv = document.querySelector(".mainDiv");
-    const gameBoard = document.createElement("div");
-    gameBoard.classList.add("gameboard");
-    const playerDiv = document.createElement("div");
-    playerDiv.setAttribute("id", "playerDiv");
-    playerDiv.classList.add("side", "left"); 
-    let h3Player = document.createElement("h3");
-    h3Player.textContent = "Player Grid";
-    let node = displayGrid();
-    playerDiv.appendChild(h3Player);
-    playerDiv.appendChild(node);
-    gameBoard.appendChild(playerDiv);
-    const winnerDiv = document.querySelector(".winnerDiv");
-    if(!winnerDiv){
-        mainDiv.appendChild(gameBoard);
-    } else {
-        mainDiv.replaceChild(gameBoard, winnerDiv);
-    }
-
-    const compDiv = document.createElement("div");
-    compDiv.setAttribute("id", "computerDiv");
-    compDiv.classList.add("side", "right"); 
-    let h3comp = document.createElement("h3");
-    h3comp.textContent = "computer Grid";
-    let node2 = displayGrid();
-    compDiv.appendChild(h3comp);
-    compDiv.appendChild(node2);
-    gameBoard.appendChild(compDiv);
-
-    const allGrids = document.querySelectorAll(".grid");
-    setGrid(allGrids[0]);
-    setGrid(allGrids[1]);
-    displaySides();
-}
-
-function displayGrid(){
-    let node = document.createElement("div");
-    node.classList.add("board");
-    let divLetter = document.createElement("div");
-    let divNumber = document.createElement("div");
-    let divgrid  = document.createElement("div");
-    divLetter.classList.add("letters");
-    divNumber.classList.add("numbers");
-    divgrid.classList.add("grid");
-    node.appendChild(divLetter);
-    node.appendChild(divNumber);
-    node.appendChild(divgrid);
-    return node;
-}
-
-function displaySides(){
-    const lettersDiv = document.querySelectorAll(".letters");
-    const numbersDiv = document.querySelectorAll(".numbers");
-    for(let j = 0; j < 2; j++){
-        let firstLetter = "@";
-        let firstNumber = 1;
-        for(let i = 0; i < 10; i++){
-            let div = document.createElement("div");
-            let newLetter = String.fromCharCode(firstLetter.charCodeAt(0) + 1);
-            firstLetter = newLetter;
-            div.textContent = newLetter;
-            lettersDiv[j].appendChild(div);
-            let div2 = document.createElement("div");
-            div2.textContent = firstNumber++;
-            numbersDiv[j].appendChild(div2);
-        }
-    }
-}
-function printWinner(winner){
-    console.log(`The winner is ${winner}`);
-    const mainDiv = document.querySelector(".mainDiv")
-    const gameboardDiv = document.querySelector(".gameboard");
-    const replaceDiv = document.createElement("div");
-    replaceDiv.classList.add("winnerDiv");
-    replaceDiv.textContent = `The winner is ${winner}`;
-    mainDiv.replaceChild(replaceDiv, gameboardDiv);
-}
 
 
 
