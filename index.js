@@ -2,6 +2,18 @@ let caseClicked = "";
 let playerCaseList = [];
 let computerCaseList = [];
 
+const playButton = document.querySelector(".divButton>button");
+playButton.addEventListener("click", () => {
+    startGame();
+});
+
+let playerShipsObject = [{coordonée : 'I9', orientation: "v"}, {coordonée : "D8", orientation: 'h'},
+{coordonée : "G2", orientation: "h"}, {coordonée : "G4", orientation : "v"},
+{coordonée :"B3", orientation : "v"}];
+let computerShipsObject = [{coordonée : 'D4', orientation: "v"}, {coordonée : "F2", orientation: 'h'},
+{coordonée : "B8", orientation: "v"}, {coordonée : "J2", orientation : "v"},
+{coordonée :"D7", orientation : "h"}];
+
 class Ship {
     constructor(lenght, position){
     this.lenght = lenght;
@@ -12,6 +24,9 @@ class Ship {
     }
     hit(){
         this.hitCount++;
+        if(this.hitCount == this.lenght){
+            this.isShunk = true;
+        }
     }
     isShunk(){
         if(this.hitCount = this.lenght){
@@ -50,7 +65,6 @@ class Gameboard {
                     currentCase = letter + number;
                     number++;
                     if(currentCase == attack){
-                        console.log("aille!"); 
                         ship.hit();
                         return true;
                     }
@@ -64,7 +78,6 @@ class Gameboard {
                     currentCase = letter + number;
                     letter = newLetter;
                     if(currentCase == attack){
-                        console.log("aille!"); 
                         ship.hit();
                         return true;
                     }
@@ -88,7 +101,49 @@ class Gameboard {
     }
 }
 
-function setCase(grid){
+
+function startGame(){
+    console.log("start game!");
+    playerCaseList = [];
+    computerCaseList = [];
+    displayGameBoard();
+    let game = new Gameboard(playerShipsObject, computerShipsObject);
+    displayShips(game.playerShips);
+    const rightDiv = document.querySelector(".right");
+    rightDiv.addEventListener("click", () => {
+        //player turn
+        if(!playerCaseList.includes(caseClicked)){
+            playerCaseList.push(caseClicked);
+            playerCaseList.push(caseClicked);
+            let isHit = game.receiveAttack(caseClicked, game.computerShips);
+            const caseClickedDiv = document.querySelectorAll((`#${caseClicked}`));
+            if(isHit){
+                caseClickedDiv[1].classList.add("shipSunk");
+            } else {
+                caseClickedDiv[1].classList.add("clicked");
+            }
+            if(game.checkIfWinner(game.computerShips)){
+                printWinner("Player");
+            }
+        //computer turn
+            setTimeout(() => {
+                let computerAttack = getComputerAttack();
+                let isHit = game.receiveAttack(computerAttack, game.playerShips);
+                const caseClickedDiv = document.querySelectorAll((`#${computerAttack}`));
+                if(isHit){
+                    caseClickedDiv[0].classList.add("shipSunk");
+                } else {
+                    caseClickedDiv[0].classList.add("clicked");
+                }
+                if(game.checkIfWinner(game.playerShips)){
+                    printWinner("Cumputer");
+                }
+            }, 700);
+        }
+    });
+}
+
+function setGrid(grid){
     let letter = "A";
     let number = 1;
     let position = "";
@@ -104,31 +159,9 @@ function setCase(grid){
         gridCase.setAttribute("id", position);
         gridCase.addEventListener("click", () => {
             caseClicked = gridCase.getAttribute('id');
-            console.log(caseClicked);
         });
         grid.appendChild(gridCase);
     }
-}
-
-
-function startGame(){
-    console.log("start game!");
-    let game = new Gameboard(playerShipsObject, computerShipsObject);
-    displayShips(game.playerShips);
-    const rightDiv = document.querySelector(".right");
-    rightDiv.addEventListener("click", () => {
-    //player turn
-    if(!playerCaseList.includes(caseClicked)){
-        playerCaseList.push(caseClicked);
-        playerTurn(caseClicked, game);
-    }
-    //computer turn
-    let computerAttack = getComputerAttack();
-    console.log("cumputer plays" + computerAttack);
-    game.receiveAttack(computerAttack, game.playerShips);
-    const caseClickedDiv = document.querySelectorAll((`#${computerAttack}`));
-    caseClickedDiv[0].classList.add("clicked");   
-    });
 }
 
 function displayShips(ships){
@@ -159,13 +192,6 @@ function displayShips(ships){
     }
 }
 
-function playerTurn(caseClicked, game){
-    console.log("player plays" + caseClicked);
-    playerCaseList.push(caseClicked);
-    game.receiveAttack(caseClicked, game.computerShips);
-    const caseClickedDiv = document.querySelectorAll((`#${caseClicked}`));
-    caseClickedDiv[1].classList.add("clicked");  
-}
 
 function getComputerAttack(){
     let attack;
@@ -181,36 +207,90 @@ function getComputerAttack(){
         attack = letter + number; 
     }
     computerCaseList.push(attack);
-    console.log(attack)
     return attack;
 }
 
-const playerGrid = document.querySelector("#playerDiv>div");
-setCase(playerGrid);
-const computerGrid = document.querySelector("#computerDiv>div");
-setCase(computerGrid);
+function displayGameBoard(){
+    const mainDiv = document.querySelector(".mainDiv");
+    const gameBoard = document.createElement("div");
+    gameBoard.classList.add("gameboard");
+    const playerDiv = document.createElement("div");
+    playerDiv.setAttribute("id", "playerDiv");
+    playerDiv.classList.add("side", "left"); 
+    let h3Player = document.createElement("h3");
+    h3Player.textContent = "Player Grid";
+    let node = displayGrid();
+    playerDiv.appendChild(h3Player);
+    playerDiv.appendChild(node);
+    gameBoard.appendChild(playerDiv);
+    const winnerDiv = document.querySelector(".winnerDiv");
+    if(!winnerDiv){
+        mainDiv.appendChild(gameBoard);
+    } else {
+        mainDiv.replaceChild(gameBoard, winnerDiv);
+    }
 
-const playButton = document.querySelector(".divButton>button");
-playButton.addEventListener("click", () => {
-    startGame();
-});
+    const compDiv = document.createElement("div");
+    compDiv.setAttribute("id", "computerDiv");
+    compDiv.classList.add("side", "right"); 
+    let h3comp = document.createElement("h3");
+    h3comp.textContent = "computer Grid";
+    let node2 = displayGrid();
+    compDiv.appendChild(h3comp);
+    compDiv.appendChild(node2);
+    gameBoard.appendChild(compDiv);
 
-let playerShipsObject = [{coordonée : 'I9', orientation: "v"}, {coordonée : "D8", orientation: 'h'},
-{coordonée : "G2", orientation: "h"}, {coordonée : "G4", orientation : "v"},
-{coordonée :"B3", orientation : "v"}];
-let computerShipsObject = [{coordonée : 'D4', orientation: "v"}, {coordonée : "F2", orientation: 'h'},
-{coordonée : "B8", orientation: "v"}, {coordonée : "J2", orientation : "v"},
-{coordonée :"D7", orientation : "h"}];
+    const allGrids = document.querySelectorAll(".grid");
+    setGrid(allGrids[0]);
+    setGrid(allGrids[1]);
+    displaySides();
+}
+
+function displayGrid(){
+    let node = document.createElement("div");
+    node.classList.add("board");
+    let divLetter = document.createElement("div");
+    let divNumber = document.createElement("div");
+    let divgrid  = document.createElement("div");
+    divLetter.classList.add("letters");
+    divNumber.classList.add("numbers");
+    divgrid.classList.add("grid");
+    node.appendChild(divLetter);
+    node.appendChild(divNumber);
+    node.appendChild(divgrid);
+    return node;
+}
+
+function displaySides(){
+    const lettersDiv = document.querySelectorAll(".letters");
+    const numbersDiv = document.querySelectorAll(".numbers");
+    for(let j = 0; j < 2; j++){
+        let firstLetter = "@";
+        let firstNumber = 1;
+        for(let i = 0; i < 10; i++){
+            let div = document.createElement("div");
+            let newLetter = String.fromCharCode(firstLetter.charCodeAt(0) + 1);
+            firstLetter = newLetter;
+            div.textContent = newLetter;
+            lettersDiv[j].appendChild(div);
+            let div2 = document.createElement("div");
+            div2.textContent = firstNumber++;
+            numbersDiv[j].appendChild(div2);
+        }
+    }
+}
+function printWinner(winner){
+    console.log(`The winner is ${winner}`);
+    const mainDiv = document.querySelector(".mainDiv")
+    const gameboardDiv = document.querySelector(".gameboard");
+    const replaceDiv = document.createElement("div");
+    replaceDiv.classList.add("winnerDiv");
+    replaceDiv.textContent = `The winner is ${winner}`;
+    mainDiv.replaceChild(replaceDiv, gameboardDiv);
+}
 
 
 
-//créer Les joueurs 
-//on joue contre un IA est passe aléatoirement ses pions
-    //(elle ne doit pas placer 2x au mm endroit)
-
-// créer la boucle de jeu
-
-//créer un module pour interagrir avec le DOM
 
 
 
