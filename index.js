@@ -4,7 +4,7 @@ let computerCaseList = [];
 
 const playButton = document.querySelector(".divButton>button");
 playButton.addEventListener("click", () => {
-    startGame();
+    resetGame();
 });
 
 let playerShipsObject = [{coordonée : 'I9', orientation: "v"}, {coordonée : "D8", orientation: 'h'},
@@ -163,6 +163,24 @@ class ManageDOM {
     }
 
     displayGameBoard(){
+        const divButton = document.querySelector(".divButton");
+        let h2 = document.createElement("h2");
+        h2.textContent = "Place your ships (press R to reverse ship)";
+        let readyButton = document.createElement("button");
+        readyButton.textContent = "ready to fight !";
+        readyButton.addEventListener("click", () => {
+            let buttonPlay = document.createElement("button");
+            buttonPlay.textContent = "replay";
+            buttonPlay.addEventListener("click", () => {
+                resetGame();
+            });
+            divButton.replaceChild(buttonPlay, readyButton);
+            divButton.removeChild(h2);
+            startGame();
+        })
+        let oldDiv = divButton.children;
+        divButton.replaceChild(h2, oldDiv[0]);
+        divButton.appendChild(readyButton);
         const mainDiv = document.querySelector(".mainDiv");
         const gameBoard = document.createElement("div");
         gameBoard.classList.add("gameboard");
@@ -175,13 +193,12 @@ class ManageDOM {
         playerDiv.appendChild(h3Player);
         playerDiv.appendChild(node);
         gameBoard.appendChild(playerDiv);
-        const winnerDiv = document.querySelector(".winnerDiv");
-        if(!winnerDiv){
+        let mainDivChildren = mainDiv.children;
+        if(!mainDivChildren[1]){
             mainDiv.appendChild(gameBoard);
         } else {
-            mainDiv.replaceChild(gameBoard, winnerDiv);
+            mainDiv.replaceChild(gameBoard, mainDivChildren[1]);
         }
-    
         const compDiv = document.createElement("div");
         compDiv.setAttribute("id", "computerDiv");
         compDiv.classList.add("side", "right"); 
@@ -196,7 +213,59 @@ class ManageDOM {
         this.setGrid(allGrids[0]);
         this.setGrid(allGrids[1]);
         this.displaySides();
+        this.placePlayerShips();
+
     }
+
+    placePlayerShips(){
+        let caseGridList = document.querySelectorAll(".grid > div");
+        let positionList = [];
+        let isShipVertical = false;
+        let squareSizes = ['60px', '90px', '120px', '150px', '180px']
+        let index = 0;
+        const square = document.createElement('div');
+        square.classList.add('square');
+        document.body.appendChild(square);
+        document.addEventListener('mousemove', (event) => {
+        const mouseX = event.clientX;
+        const mouseY = event.clientY;
+        square.style.left = mouseX - 15 + 'px';
+        square.style.top = mouseY - 15 +'px';
+        });
+        window.addEventListener("keydown", (e) =>{
+            let squareWidth = getComputedStyle(square).width;
+            let squareHeight = getComputedStyle(square).height;
+            if(e.key == "r" || e.key == "R"){
+                if(isShipVertical){
+                    isShipVertical = false;
+                    square.style.width = squareHeight;
+                    square.style.height = squareWidth;
+                } else {
+                    isShipVertical = true;
+                    square.style.width = squareHeight;
+                    square.style.height = squareWidth;
+                }
+            
+            }
+        });
+        for(let i = 0; i < 100; i++){
+            caseGridList[i].addEventListener('click', () =>{
+                caseGridList[i].classList.add("shipAlive");
+                let id = caseGridList[i].getAttribute("id");
+                if(isShipVertical){
+                    square.style.height = squareSizes[index];  //todo : : arranger l'aggrandissement PROGRESSIF de ca
+                } else {
+                    square.style.width = squareSizes[index];
+                }
+                index++
+                console.log(square.style.height);
+                positionList.push(id);
+                console.log(positionList);
+            });
+        }
+
+    }
+
     setGrid(grid){
         let letter = "A";
         let number = 1;
@@ -248,11 +317,14 @@ class ManageDOM {
 
 let dom = new ManageDOM();
 
-function startGame(){
+function resetGame(){ // appelé si play est clické!
     console.log("start game!");
     playerCaseList = [];
     computerCaseList = [];
     dom.displayGameBoard();
+}
+
+function startGame(){ //appelé si ready to fight est clické
     let game = new Gameboard(playerShipsObject, computerShipsObject);
     dom.displayShips(game.playerShips);
     const rightDiv = document.querySelector(".right");
