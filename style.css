@@ -143,9 +143,13 @@ align-items: center;
 }
 
 .square {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     position: absolute;
     background-color: var(--head-color);
     pointer-events: none;
+}
+
+.comp{
+    
 }
